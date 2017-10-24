@@ -1,0 +1,179 @@
+- name: Configure webserver with nginx and tls
+  hosts: centos1
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+ 
+    
+
+    - name: create www group
+      group:
+        name: www
+        state: present
+
+    - name: create nginx user
+      user: 
+        name: www
+        shell: /bin/bash
+        group: www
+
+    - name: refresh nginx and php rpm
+      yum:
+        name: "http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm"
+        name: "https://mirror.webtatic.com/yum/el6/latest.rpm"
+        state: present
+
+    - name: install some extensions and nginx and php-fpm
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - pcre
+        - pcre-devel
+        - zlib
+        - zlib-devel
+        - openssl
+        - nginx
+        - php71w-fpm
+        - php71w-mysqlnd
+        - php71w-pdo
+        - php71w-pecl-redis
+        - libselinux-python
+        - zip
+        - unzip
+        - redis
+
+    - name: install git 
+      yum:
+        name: git
+        state: present
+    - name: install redis
+       
+#    - name: Download Composer
+#      script: scripts/install_composer.sh
+
+#    - name: Move Composer globally
+#      command: mv composer.phar /usr/local/bin/composer
+
+#    - name: set permission for composer
+#      file:
+#        path: /usr/local/bin/composer
+#        mode: "a+x"
+
+    - name: make dir for php-sock and change mod to 777
+      file:
+        path: /var/run/php
+        path: "{{ nginx_error_log_dir }}"
+        #path: "{{ nginx_symfony_log_dir }}"
+        state: directory
+        mode: 0777
+        
+        path: "{{ php_fpm_sock }}"
+        state: touch
+        mode: 0777
+
+    - name: mkdir symfony
+      file: 
+        path: "{{ nginx_symfony_log_dir }}"
+        state: directory
+        mode: 0777
+
+    - name: mkdir nginx pid dir
+      file: 
+        path: "{{ nginx_pid_dir }}" 
+        state: directory
+        mode: 0777
+    - name: mkdir for ssh
+      file:
+        path: "/home/{{ www_user }}/.ssh"
+        state: directory
+       
+    - name: copy dirs
+      copy:
+        src: files/nginx/conf
+        dest: /etc/nginx/
+  
+    - name: copy ssh pub key
+      copy:
+        src: "{{ ssh_key_dir }}/id_rsa.pub"
+        dest: /home/{{ www_user }}/.ssh/id_rsa.pub
+        owner: vagrant
+        mode: 0644
+
+    - name: copy shh private key
+      copy:
+        src: "{{ ssh_key_dir }}/id_rsa"
+        dest: /home/{{ www_user }}/.ssh/id_rsa
+        owner: vagrant
+        mode: 0600
+
+    - name: generate php-fpm.conf and ngixn.conf  file
+      template: 
+        src: templates/www-php-fpm_conf.j2 
+        dest: /etc/php-fpm.d/www.conf 
+
+        src: templates/nginx/nginx_conf.j2
+        dest: /etc/nginx/conf/nginx.conf
+ 
+    - name: pull project from git
+      git: 
+        repo: "git@git.coding.net:canvas0607/sf_login.git"
+        dest: "/home/{{ www_user }}/{{ sf_project_dir }}"
+        remote: master
+      become: yes
+      become_user: "{{ www_user }}"
+      
+   # - name: install compents 
+   #   composer:
+   #     command: require
+   #     arguments: "/home/{{ www_user }}/{{ sf_project_dir }}/composer.json"
+   #     working_dir: "/home/{{ www_user }}/{{ sf_project_dir }}"
+   #   become: yes
+   #   become_user: "{{ www_user }}"
+
+    - name: restart nginx
+      command: composer install
+      args:
+         chdir: "/home/{{ www_user }}/{{ sf_project_dir }}"
+      become: yes
+      become_user: "{{ www_user }}"
+   
+    - name: restart php-fpm
+      service:
+        name: php-fpm
+        #name: nginx
+        state: restarted
+
+    - name: restart nginx
+      command: nginx -c /etc/nginx/conf/nginx.conf -s reload
+      notify: change_mod_php-fpm.sock
+
+    - name: clear php
+      command: php bin/console cache:clear --env=prod --no-debug
+      args:
+         chdir: "/home/{{ www_user }}/{{ sf_project_dir }}"
+
+  handlers:
+    - name: change_mod_php-fpm.sock 
+      file:
+        path: "{{ php_fpm_sock }}"
+        state: touch
+        mode: 0777 
+
+    - name: restart_php-fpm
+      service:
+        name: php-fpm
+        state: restarted
+
+  vars:
+    php_fpm_sock_dir: /var/run/php
+    php_fpm_sock: /var/run/php/php-fpm.sock
+    www_user: vagrant
+    nginx_error_log_dir: /var/log/nginx/
+    nginx_symfony_log_dir: /var/log/sflog/
+    nginx_pid_dir: /var/run/nginx/
+    sf_project_dir: /www/sf_log/
+    githubuser: '1210999688@qq.com'
+    githubpassword: 'tusbasa1' 
+    ssh_key_dir: "files/ssh_keys"
