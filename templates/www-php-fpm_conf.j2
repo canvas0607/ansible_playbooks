@@ -1,9 +1,9 @@
 ;[www]
-[{{ www_user }}]
-user = {{ www_user }}
-group = {{ www_user }}
+[{{ user }}]
+user = {{ user }}
+group = {{ group }}
 
-listen = /var/run/php/php-fpm.sock
+listen = {{ php_fpm_sock_file }}
 
 pm = dynamic
 

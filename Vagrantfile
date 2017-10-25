@@ -18,8 +18,36 @@ Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
   config.vm.define "centos1" do |vagrant1|
     vagrant1.vm.box = "centos6"
-    vagrant1.vm.network "forwarded_port", guest: 80, host: 8080
-    vagrant1.vm.network "forwarded_port", guest: 443, host: 8443
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 9080
+    vagrant1.vm.network "forwarded_port", guest: 443, host: 9443
+  end
+
+  config.ssh.insert_key = false
+  config.vm.define "centos2" do |vagrant1|
+    vagrant1.vm.box = "centos6"
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 9081
+    vagrant1.vm.network "forwarded_port", guest: 443, host: 9443
+  end
+
+  config.ssh.insert_key = false
+  config.vm.define "centos3" do |vagrant1|
+    vagrant1.vm.box = "centos6"
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 9082
+    vagrant1.vm.network "forwarded_port", guest: 443, host: 9444
+  end
+
+  config.ssh.insert_key = false
+  config.vm.define "centos4" do |vagrant1|
+    vagrant1.vm.box = "centos6"
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 9083
+    vagrant1.vm.network "forwarded_port", guest: 443, host: 9445
+  end
+ 
+  config.ssh.insert_key = false
+  config.vm.define "centos5" do |vagrant1|
+    vagrant1.vm.box = "centos6"
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 9084
+    vagrant1.vm.network "forwarded_port", guest: 443, host: 9446
   end
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs

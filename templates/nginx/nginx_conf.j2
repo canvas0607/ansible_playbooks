@@ -1,12 +1,12 @@
-user   {{ www_user }};
+user   {{ user }};
 
 worker_processes auto;
 
 #error_log  /opt/logs/nginx_error.log  crit;
-error_log  {{ nginx_error_log_dir }}nginx_error.log  crit;
+error_log  {{ nginx_error_log_dir }}/nginx_error.log  crit;
 
 #pid        /usr/local/nginx/logs/nginx.pid;
-pid        {{ nginx_pid_dir }}nginx.pid;
+pid        {{ nginx_pid_dir }}/nginx.pid;
 
 #Specifies the value for maximum file descriptors that can be opened by this process.
 worker_rlimit_nofile 65535;
@@ -69,12 +69,12 @@ server
 
 
    # server_name web.cqz.37wan.com;
-    root  /home/{{ www_user }}{{ sf_project_dir }}web;
+    root  {{ sf_project_dir }}/web;
     location / {
            try_files $uri /app_dev.php$is_args$args;
     }
 	location ~ ^/(app_dev|config)\.php(/|$) {
-        fastcgi_pass unix:{{ php_fpm_sock }};
+        fastcgi_pass unix:{{ php_fpm_sock_file }};
         #fastcgi_pass 127.0.0.1:9000;
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         include fastcgi_params;
@@ -83,7 +83,7 @@ server
     }
        location ~ ^/app\.php(/|$) {
         #fastcgi_pass unix:/var/run/php/php7-fpm.sock;
-        fastcgi_pass unix:{{ php_fpm_sock }};
+        fastcgi_pass unix:{{ php_fpm_sock_file }};
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
@@ -92,8 +92,8 @@ server
 
    #error_log /var/log/sflog/symfony.error.log;
   # access_log  /var/log/sflog/symfony.access.log;
-   error_log {{ nginx_symfony_log_dir }}symfony.error.log;
-   access_log {{ nginx_symfony_log_dir }}symfony.access.log;
+   error_log {{ nginx_symfony_log_dir }}/error.log;
+   access_log {{ nginx_symfony_log_dir }}/access.log;
 }		
 		
 

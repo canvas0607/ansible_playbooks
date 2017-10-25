@@ -1,0 +1,22 @@
+- name: Configure webserver with nginx and tls
+  hosts: centos4
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: restart php-fpm
+      service:
+        name: php-fpm
+        state: restarted
+
+  vars:
+    user: vagrant
+    group: vagrant
+    home_dir: "/home/{{ user }}"
+    php_fpm_sock_dir: "{{ home_dir }}/var/run/php"
+    php_fpm_sock_file: "{{ php_fpm_sock_dir }}/php-fpm.sock"
+    nginx_error_log_dir: "{{ home_dir }}/var/log/nginx"
+    nginx_symfony_log_dir: "{{ home_dir }}/var/log/sflog"
+    nginx_pid_dir: "{{ home_dir }}/var/run/nginx"
+    sf_project_dir: "{{ home_dir }}/www/sf_log"
+    ssh_key_dir: "files/ssh_keys"
